@@ -184,8 +184,6 @@ class SampleBot():
             target_liner_y = self.pose_y
             target_angular_z = self.th
 
-            rospy.loginfo("wa")
-
             # カメラ画像内に敵がいた場合
             if self.cx != 0 and self.cy != 0:
                 mode = "battle"
@@ -196,16 +194,18 @@ class SampleBot():
 
                 # 真ん中を向くように方向転換
                 diff_pix = self.cx - 320
-                linear_x = 0.0
-                linear_y = 0.0
-                anglular_z = 0
+                # linear_x = 0.0
+                # linear_y = 0.0
+                # anglular_z = 0
 
                 if abs(diff_pix) < 320 and diff_pix > 20:
                     # anglular_z = -0.5 #-0.3
-                    target_angular_z -= 0.5
+                    target_angular_z -= 45
+                    # target_angular_z -= 0.5
                 elif abs(diff_pix) < 320 and diff_pix < -20:
                     # anglular_z = 0.5 #0.3
-                    target_angular_z += 0.5
+                    target_angular_z += 45
+                    # target_angular_z += 0.5
                 # elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
                 #     linear_x = 2.0
                 #     linear_y = 2.0
@@ -227,24 +227,24 @@ class SampleBot():
 
                 self.client.cancel_goal()
 #                diff_degree = self.enemy_direction_deg - self.th
-                linear_x = 0.0
-                linear_y = 0.0
-                anglular_z = 0.0
+                # linear_x = 0.0
+                # linear_y = 0.0
+                # anglular_z = 0.0
                 
 #                self.diff_pub(diff_degree)
 
                 # 前方189度のみ監視する版(後ろを振り向くと的が取られることがある)
                 if abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg > 270:
                     # anglular_z = -0.85 #-1.5
-                    target_angular_z -= 0.5
+                    target_angular_z -= 45
                 elif abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg < 91:
                     # anglular_z = 0.85 #1.5
-                    target_angular_z += 0.5
+                    target_angular_z += 45
                 # elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
                 #     linear_x = 2.0
                 #     linear_y = 2.0
                 else:
-                    pass
+                    target_angular_z += 0
                     # anglular_z = 0.0
 
                 """
@@ -281,48 +281,14 @@ class SampleBot():
             if mode == "patrol":
                 rospy.loginfo("patrol")
                 # waypointに到達したら次のwaypointにする
-                if self.client.get_state() == GoalStatus.SUCCEEDED:
-                    # if waypoint_num == 16:
-                        
-                    #     if not self.score[11] == self.score[7] == self.score[5] == 1:   # 下側
-                    #         # スタート地点付近
-                    #         self.waypoint_list.append([-0.95,0.0,300])
-                    #         self.waypoint_list.append([-0.98,0.0,90])
-
-                    #     # パティ横の壁
-                    #     self.waypoint_list.append([-0.9,0.58,50])
-                    #     self.waypoint_list.append([-0.55,0.98,45])
-
-                    #     if not self.score[1] == self.score[10] == self.score[4] == 1:   # 左側
-                    #         self.waypoint_list.append([0,0.9,225])
-                    #         self.waypoint_list.append([0,0.9,30])
-
-                    #     # カレー横の壁
-                    #     self.waypoint_list.append([0.5,0.95,315])
-                    #     self.waypoint_list.append([0.9,0.55,315])
-
-                    #     if not self.score[2] == self.score[8] == self.score[0] == 1:   # 上側
-                    #         self.waypoint_list.append([0.9,0,120])
-                    #         self.waypoint_list.append([0.9,0,270])
-
-                    #     # チーズ横の壁
-                    #     self.waypoint_list.append([0.8,-0.55,225])
-                    #     self.waypoint_list.append([0.5,-0.85,225])
-
-                    #     if not self.score[6] == self.score[9] == self.score[3] == 1:   # 右側
-                    #         self.waypoint_list.append([0,-0.9,45])
-                    #         self.waypoint_list.append([0,-0.9,180])
-
-                    #     # トマト横の壁
-                    #     self.waypoint_list.append([-0.7,-0.85,140])
-                    #     self.waypoint_list.append([-0.93,-0.58,135])
-                    
+                if to_patrol_flag == False and self.client.get_state() == GoalStatus.SUCCEEDED:
                     waypoint_num += 1
+                    self.setGoal(self.waypoint_list[waypoint_num])
 
                 # battleモードで目標位置に到達してpatrolモードに戻った場合
-                if to_patrol_flag = True:
+                if to_patrol_flag == True and self.client.get_state() == GoalStatus.SUCCEEDED:
                     self.setGoal(self.waypoint_list[waypoint_num])
-                    waypoint_num -= 1
+                    to_patrol_flag = False
 
                 # 動いてなかったらwaypointをセット
                 if self.client.get_state() != GoalStatus.ACTIVE:
@@ -331,7 +297,12 @@ class SampleBot():
 
             elif mode == "battle":
                 rospy.loginfo("battle")
-                self.setGoal([target_liner_x, target_liner_y, target_angular_z])
+                if self.client.get_state() == GoalStatus.SUCCEEDED:
+                    self.setGoal([target_liner_x, target_liner_y, target_angular_z])
+
+                # 動いてなかったらwaypointをセット
+                if self.client.get_state() != GoalStatus.ACTIVE:
+                    self.setGoal([target_liner_x, target_liner_y, target_angular_z])
 
             r.sleep()
 

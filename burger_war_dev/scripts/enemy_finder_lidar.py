@@ -75,7 +75,7 @@ class EnemyPointsFinder():
 
         enemy_scan = [1 if self.is_point_enemy(x,i) else 0 for i,x in  enumerate(near_scan)]
 
-        is_near_enemy = (sum(enemy_scan) > 6 and sum(enemy_scan) < 12)  # if less than 5 points, maybe noise
+        is_near_enemy = (sum(enemy_scan) > 6 and sum(enemy_scan) < 15)  # if less than 5 points, maybe noise
         if is_near_enemy:
             idx_l = [i for i, x in enumerate(enemy_scan) if x == 1]
             idx = idx_l[int(len(idx_l)/2)]
@@ -134,7 +134,7 @@ class EnemyPointsFinder():
             elif (pow((point_x + locate), 2) + pow((point_y + locate), 2)) < pow(radius, 2):
                 return False
             # 真ん中の大きい障害物
-            elif (pow(point_x, 2) + pow(point_y, 2)) < pow(radius, 2):
+            elif (pow(point_x, 2) + pow(point_y, 2)) < pow(large_radius, 2):
                 return False
             else:
                 return True
