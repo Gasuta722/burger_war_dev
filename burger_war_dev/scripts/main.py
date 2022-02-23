@@ -179,17 +179,28 @@ class SampleBot():
 
     def strategy(self):
         r = rospy.Rate(10) # change speed 5fps
-        waypoint_num = 0
 
-#        while(1):
-#            pass
-#            r.sleep()
+        # patrol用の目標位置配列を順番に回す用の
+        waypoint_num = 0
+        # patrolモードとbattleモードを追加
+        mode = "patrol"
+        # battle modeからpatrol modeに戻るときに、目標位置をbattle modeに入る前にもどすためのflag    
+        to_patrol_flag = False
+
 
         while not rospy.is_shutdown():
+            # 目標姿勢のための変数。まずは現在のamcl_poseを格納
+            target_liner_x = self.pose_x
+            target_liner_y = self.pose_y
+            target_angular_z = self.th
 
+            rospy.loginfo("wa")
 
             # カメラ画像内に敵がいた場合
             if self.cx != 0 and self.cy != 0:
+                mode = "battle"
+                to_patrol_flag = True
+
 #            if False:
                 self.client.cancel_goal()
 
@@ -200,24 +211,30 @@ class SampleBot():
                 anglular_z = 0
 
                 if abs(diff_pix) < 320 and diff_pix > 20:
-                    anglular_z = -0.5 #-0.3
+                    # anglular_z = -0.5 #-0.3
+                    target_angular_z -= 0.5
                 elif abs(diff_pix) < 320 and diff_pix < -20:
-                    anglular_z = 0.5 #0.3
-                elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
-                    linear_x = 2.0
-                    linear_y = 2.0
+                    # anglular_z = 0.5 #0.3
+                    target_angular_z += 0.5
+                # elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
+                #     linear_x = 2.0
+                #     linear_y = 2.0
                 else:
-                    anglular_z = 0.0
+                    # anglular_z = 0.0
+                    pass
 
-                twist = Twist()
-                twist.linear.x = linear_x; twist.linear.y = linear_y; twist.linear.z = 0
-                twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = anglular_z
-                self.vel_pub.publish(twist)
+                # twist = Twist()
+                # twist.linear.x = linear_x; twist.linear.y = linear_y; twist.linear.z = 0
+                # twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = anglular_z
+                # self.vel_pub.publish(twist)
 
 
             # Lidarが敵を捉えた場合
 #            elif self.is_enemy_points == True:
             elif self.enemy_direction_deg > 0:
+                mode = "battle"
+                to_patrol_flag = True
+
                 self.client.cancel_goal()
 #                diff_degree = self.enemy_direction_deg - self.th
                 linear_x = 0.0
@@ -228,14 +245,17 @@ class SampleBot():
 
                 # 前方189度のみ監視する版(後ろを振り向くと的が取られることがある)
                 if abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg > 270:
-                    anglular_z = -0.85 #-1.5
+                    # anglular_z = -0.85 #-1.5
+                    target_angular_z -= 0.5
                 elif abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg < 91:
-                    anglular_z = 0.85 #1.5
-                elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
-                    linear_x = 2.0
-                    linear_y = 2.0
+                    # anglular_z = 0.85 #1.5
+                    target_angular_z += 0.5
+                # elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
+                #     linear_x = 2.0
+                #     linear_y = 2.0
                 else:
-                    anglular_z = 0.0
+                    pass
+                    # anglular_z = 0.0
 
                 """
                 # 360度監視する板
@@ -250,10 +270,10 @@ class SampleBot():
                 # rospy.loginfo("enemy_direction_deg: {}".format(self.enemy_direction_deg))
                 # rospy.loginfo("enemy_distance: {}".format(self.enemy_distance))
 
-                twist = Twist()
-                twist.linear.x = linear_x; twist.linear.y = linear_y; twist.linear.z = 0
-                twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = anglular_z
-                self.vel_pub.publish(twist)
+                # twist = Twist()
+                # twist.linear.x = linear_x; twist.linear.y = linear_y; twist.linear.z = 0
+                # twist.angular.x = 0; twist.angular.y = 0; twist.angular.z = anglular_z
+                # self.vel_pub.publish(twist)
 
 
 #                if self.client.get_state() != GoalStatus.ACTIVE:
@@ -261,17 +281,32 @@ class SampleBot():
 
 
             # 敵がいない場合
-#            """
             else:
+                mode = "patrol"
                 # rospy.loginfo(self.client.get_state())
+
+
+
+            # setGoalをする
+            if mode == "patrol":
+                rospy.loginfo("patrol")
                 # waypointに到達したら次のwaypointにする
                 if self.client.get_state() == GoalStatus.SUCCEEDED:
                     waypoint_num += 1
 
+                # battleモードで目標位置に到達してpatrolモードに戻った場合
+                if to_patrol_flag = True:
+                    self.setGoal(self.waypoint_list[waypoint_num])
+                    waypoint_num -= 1
+
                 # 動いてなかったらwaypointをセット
                 if self.client.get_state() != GoalStatus.ACTIVE:
                     self.setGoal(self.waypoint_list[waypoint_num])
-#            """
+
+
+            elif mode == "battle":
+                rospy.loginfo("battle")
+                self.setGoal([target_liner_x, target_liner_y, target_angular_z])
 
             r.sleep()
 
