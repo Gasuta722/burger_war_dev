@@ -26,36 +26,76 @@ class SampleBot():
     waypoint_list = []
 
     # スタート地点付近
-    waypoint_list.append([-0.93,0.0,300])
-    waypoint_list.append([-0.95,0.0,90])
+    waypoint_list.append([-0.90,-0.45,0])
+    waypoint_list.append([-0.65,0.0,0])
+    # waypoint_list.append([-0.85,-0.1,300])
+    # waypoint_list.append([-0.80,-0.1,20])
+    waypoint_list.append([-1.0,0.45,15])
 
     # パティ横の壁
-    waypoint_list.append([-0.9,0.58,50])
-    waypoint_list.append([-0.55,0.95,45])
+    waypoint_list.append([-1.0,0.45,65])
+    waypoint_list.append([-0.55,0.90,45])
 
-    waypoint_list.append([0,0.9,225])
-    waypoint_list.append([0,0.9,30])
+    waypoint_list.append([0,0.75,205])
+    waypoint_list.append([0,0.75,30])
 
     # カレー横の壁
-    waypoint_list.append([0.5,0.95,315])
-    waypoint_list.append([0.9,0.55,315])
+    waypoint_list.append([0.65,0.80,315])
+    waypoint_list.append([0.95,0.43,315])
 
-    waypoint_list.append([0.9,0,120])
-    waypoint_list.append([0.9,0,270])
+    waypoint_list.append([0.92,0.43,180])
+    waypoint_list.append([0.70,0,180])
+    waypoint_list.append([0.95,-0.48,180])
 
     # チーズ横の壁
-    waypoint_list.append([0.8,-0.63,225])
-    waypoint_list.append([0.5,-0.9,220])
+    waypoint_list.append([0.83,-0.55,236])
+    waypoint_list.append([0.5,-0.95,220])
 
 
-    waypoint_list.append([0,-0.9,45])
-    waypoint_list.append([0,-0.9,180])
+    waypoint_list.append([0,-0.78,35])
+    waypoint_list.append([0,-0.78,180])
 
     # トマト横の壁
     waypoint_list.append([-0.68,-0.85,140])
     waypoint_list.append([-0.93,-0.58,135])
 
-    waypoint_list.append([-0.95,0,300])
+    # waypoint_list.append([-0.95,0,280])
+
+
+    # # スタート地点付近
+    # waypoint_list.append([-0.65,0.0,00])
+    # waypoint_list.append([-1.0,0.0,00])
+    # waypoint_list.append([-0.85,-0.1,300])
+    # # waypoint_list.append([-0.80,-0.1,20])
+    # waypoint_list.append([-0.85,0.1,90])
+
+    # # パティ横の壁
+    # waypoint_list.append([-0.80,0.70,50])
+    # waypoint_list.append([-0.55,0.95,45])
+
+    # waypoint_list.append([0,0.75,205])
+    # waypoint_list.append([0,0.75,30])
+
+    # # カレー横の壁
+    # waypoint_list.append([0.6,0.90,315])
+    # waypoint_list.append([0.9,0.55,315])
+
+    # waypoint_list.append([0.80,0,110])
+    # waypoint_list.append([0.80,0,270])
+
+    # # チーズ横の壁
+    # waypoint_list.append([0.8,-0.70,225])
+    # waypoint_list.append([0.5,-0.95,220])
+
+
+    # waypoint_list.append([0,-0.80,35])
+    # waypoint_list.append([0,-0.80,180])
+
+    # # トマト横の壁
+    # waypoint_list.append([-0.68,-0.85,140])
+    # waypoint_list.append([-0.93,-0.58,135])
+
+    # # waypoint_list.append([-0.95,0,280])
 
     waypoint_list.extend(waypoint_list)
 
@@ -193,9 +233,9 @@ class SampleBot():
                     anglular_z = -0.5 #-0.3
                 elif abs(diff_pix) < 320 and diff_pix < -20:
                     anglular_z = 0.5 #0.3
-                elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
-                    linear_x = 2.0
-                    linear_y = 2.0
+                elif self.enemy_distance > 0.6: # 距離みて近づく（距離見れてないから動いてない）
+                    linear_x = 0.5
+                    linear_y = 0.5
                 else:
                     anglular_z = 0.0
 
@@ -207,7 +247,7 @@ class SampleBot():
 
             # Lidarが敵を捉えた場合
 #            elif self.is_enemy_points == True:
-            elif self.enemy_direction_deg > 0:
+            elif self.enemy_direction_deg > 0 and (self.enemy_direction_deg > 270 or self.enemy_direction_deg < 91):
                 self.client.cancel_goal()
 #                diff_degree = self.enemy_direction_deg - self.th
                 linear_x = 0.0
@@ -217,13 +257,13 @@ class SampleBot():
 #                self.diff_pub(diff_degree)
 
                 # 前方189度のみ監視する版(後ろを振り向くと的が取られることがある)
-                if abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg > 270:
+                if self.enemy_direction_deg < 350 and self.enemy_direction_deg >= 270:
                     anglular_z = -0.85 #-1.5
-                elif abs(self.enemy_direction_deg) > 10 and self.enemy_direction_deg < 91:
+                elif self.enemy_direction_deg > 10 and self.enemy_direction_deg <= 91:
                     anglular_z = 0.85 #1.5
-                elif self.enemy_distance > 0.5: # 距離みて近づく（距離見れてないから動いてない）
-                    linear_x = 2.0
-                    linear_y = 2.0
+                elif self.enemy_distance > 0.6: # 距離みて近づく（距離見れてないから動いてない）
+                    linear_x = 0.5
+                    linear_y = 0.5
                 else:
                     anglular_z = 0.0
 
